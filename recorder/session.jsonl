@@ -1,0 +1,12 @@
+{"type":"session_start","t":1781860591177,"node":"v22.17.0","root":"C:\\Users\\Sathwik\\OneDrive\\Desktop\\candidate"}
+{"type":"seed","t":1781860591180,"rel":"src\\cache.js","bytes":1560,"totalLines":55,"addedLines":55,"removedLines":0,"hash":"c0b70f7cbc50750f"}
+{"type":"seed","t":1781860591181,"rel":"src\\clock.js","bytes":826,"totalLines":36,"addedLines":36,"removedLines":0,"hash":"c5dd73d9e7de3ad6"}
+{"type":"seed","t":1781860591183,"rel":"src\\rateLimiter.js","bytes":867,"totalLines":30,"addedLines":30,"removedLines":0,"hash":"2209e3291f345530"}
+{"type":"seed","t":1781860591183,"rel":"src\\server.js","bytes":1068,"totalLines":27,"addedLines":27,"removedLines":0,"hash":"b7081d1b0c90e23f"}
+{"type":"seed","t":1781860591185,"rel":"test\\example.test.js","bytes":1861,"totalLines":54,"addedLines":54,"removedLines":0,"hash":"544bd2eaa1aa89b2"}
+{"type":"edit","t":1781862028570,"rel":"src\\cache.js","bytes":3324,"totalLines":130,"addedLines":82,"removedLines":7,"hash":"1871c0b71174f697"}
+{"type":"edit","t":1781862032997,"rel":"src\\rateLimiter.js","bytes":1773,"totalLines":60,"addedLines":33,"removedLines":3,"hash":"54f016d28ebf03a4"}
+{"type":"edit","t":1781862070822,"rel":"src\\server.js","bytes":7274,"totalLines":206,"addedLines":184,"removedLines":5,"hash":"c3466d602a3d3680"}
+{"type":"edit","t":1781862078125,"rel":"src\\server.js","bytes":7238,"totalLines":204,"addedLines":0,"removedLines":2,"hash":"96bf5b5c7e620a0a"}
+{"type":"edit","t":1781862097586,"rel":"test\\example.test.js","bytes":5950,"totalLines":194,"addedLines":140,"removedLines":0,"hash":"7742023f22f607d6"}
+{"type":"session_end","t":1781862150000}

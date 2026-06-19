@@ -1,0 +1,13 @@
+{
+  "name": "concurrent-cache-assignment",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Take-home: concurrency-safe TTL+LRU cache, token-bucket rate limiter, and REST API.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test",
+    "record": "node recorder/record.js"
+  }
+}
