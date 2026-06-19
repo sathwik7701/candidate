@@ -1,55 +1,44 @@
-# NOTES: Concurrency-Safe Cache, Rate Limiter & Server
+# NOTES
 
-## 1. How I Built It
+## What I Built
 
-### Cache (`src/cache.js`)
+### Cache
+I used JavaScript Map for the cache because it keeps things in order. When someone does `get()`, I delete and re-add the key so it moves to the end (most recently used). When the cache is full, the first item in the Map gets removed (least recently used). Simple and fast.
 
-**LRU stuff** - I used JavaScript's Map because it remembers the order you add things. When someone asks for a key with `get()`, I delete it and add it back so it moves to the end (most recently used). When the cache gets full, I just delete the first item in the Map (that's the oldest one). Pretty simple and fast.
+For TTL, I check expiration lazily - only when someone tries to access the key. `size()` cleans up all expired items at once.
 
-**TTL (Time To Live)** - I don't clean expired items immediately. Instead, I check if they're expired when someone tries to access them. When you call `size()`, I go through everything and clean up expired ones at once.
+The single-flight thing was cool. Multiple requests for the same missing key share one promise. First request starts computing, others wait for the same promise. If it fails, I remove it from the waiting list so next request retries.
 
-**Single-Flight thing** - This was interesting. When 5 people ask for the same missing key at the same time, only 1 person actually computes it. The others just wait for that same promise. Once it's done, everyone gets the result. If it fails, I remove it from the waiting list so the next person tries again.
+### Rate Limiter
+Each client gets their own bucket stored in a Map. Everyone starts with full tokens. Instead of using timers, I refill tokens lazily - when someone asks for a token, I check how much time passed and add tokens accordingly.
 
-### Rate Limiter (`src/rateLimiter.js`)
+`retryAfterMs()` just calculates how long until there's at least 1 token and rounds up so the client actually gets one.
 
-**Token Bucket** - Each client has their own bucket in a Map. Everyone starts with full tokens. Instead of using timers to refill, I just check how much time passed when someone asks for a token and add tokens based on that.
+### Server
+I used Node's built-in http module instead of Express to avoid dependencies.
 
-**Retry After** - Just simple math. Figure out how long until there's at least 1 token and round up so the user definitely gets one.
+I validate JSON and required fields like `value`. Bad requests get 400.
 
-### HTTP Server (`src/server.js`)
-
-**No Express** - I used Node's built-in http module instead of installing Express. Keeps it simple and no npm installs needed.
-
-**Checking Inputs** - I validate JSON and check for required fields like `value`. If something's wrong, I return 400.
-
-**Rate Limiting** - Applied to everything except `/health`. Uses `x-client-id` header. Returns 429 with `Retry-After` when blocked.
+Rate limiting applies to all routes except `/health`. Uses `x-client-id` header. Returns 429 with `Retry-After` header when blocked.
 
 ---
 
-## 2. The Bug That Took Me Too Long to Fix
+## Hardest Bug
 
-### Making `costMs` Work with ManualClock
+The delay for `costMs` was annoying. In tests they use `ManualClock` which doesn't move in real time. I initially used `setTimeout` but tests would hang forever because the clock never advanced.
 
-The `/compute/:key` endpoint can pretend to do expensive work with `costMs`. 
+I made a `delay()` function that checks the clock type:
+- RealClock → use `setTimeout`
+- ManualClock → use a loop with `setImmediate` that keeps checking the clock
 
-**The Problem**: 
-In tests, they use `ManualClock` which doesn't actually move forward in real time. I initially used `setTimeout` for the delay, but in tests the clock never advanced so it would just hang forever.
-
-**How I Fixed It**:
-I made a `delay()` function that handles both cases:
-- If it's a real clock, use `setTimeout` (normal behavior)
-- If it's a manual clock, use a loop with `setImmediate` that keeps checking the clock
-
-This loop keeps yielding control to the event loop. When the test calls `clock.advance()`, the loop sees the time changed and continues immediately.
-
-Took me a while to figure out why tests were hanging!
+The loop yields control to the event loop. When the test calls `clock.advance()`, the loop sees time moved and continues. Took me a while to figure out why tests were hanging.
 
 ---
 
-## 3. What I'd Change Later
+## What I'd Improve
 
-1. **Background Cleanup** - Right now, expired cache items only get cleaned when someone tries to access them. If I had millions of items that nobody ever asks for, they'd just sit in memory. I'd add a background cleanup.
+1. **Background cleanup** - Expired items only get removed when accessed. With millions of items that never get touched, memory would keep growing. I'd add a cleanup interval.
 
-2. **Rate Limiter Memory** - Client buckets stay in memory forever, even if a client makes 1 request and never comes back. I'd clean up inactive clients.
+2. **Rate limiter cleanup** - Client buckets stay in memory forever even if client never comes back. I'd remove inactive clients after some time.
 
-3. **Better Error Messages** - Some error messages are basic. Could make them more helpful.
+3. **Better error messages** - Could make them more descriptive for debugging.
